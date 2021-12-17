@@ -34,7 +34,7 @@ namespace GetHistory_Server
             {
                 this.listBox2.Items.Add(allHistoryItems[i].URL);
             }
-         
+         //aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa *КРИЧИТ оТ бОЛИ*
         }
 
         private void listBox2_SelectedIndexChanged(object sender, EventArgs e)

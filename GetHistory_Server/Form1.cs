@@ -28,18 +28,24 @@ namespace GetHistory_Server
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             List<HistoryItem> allHistoryItems = new List<HistoryItem>();
+            List<URL> mozillaurls = new List<URL>();
             server.SendMsgToClien(server.clients[this.listBox1.SelectedIndex],"gethistory");
+            mozillaurls= JsonSerializer.Deserialize<List<URL>>(server.GetMsg(server.clients[this.listBox1.SelectedIndex]));
             allHistoryItems = JsonSerializer.Deserialize<List<HistoryItem>>(server.GetMsg(server.clients[this.listBox1.SelectedIndex]));
             for (int i = 0; i < allHistoryItems.Count; i++)
             {
-                this.listBox2.Items.Add(allHistoryItems[i].URL);
+                this.listBox2.Items.Add($"Google: {allHistoryItems[i].URL}");
             }
-         //aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa *КРИЧИТ оТ бОЛИ*
+            for (int i = 0; i < mozillaurls.Count; i++)
+            {
+                this.listBox2.Items.Add($"{mozillaurls[i].BrowserName}: {mozillaurls[i].url}");
+            }
+
         }
 
         private void listBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(this.listBox2.SelectedItem.ToString());
+            System.Diagnostics.Process.Start(this.listBox2.SelectedItem.ToString().Split(' ').Last());
 
         }
 

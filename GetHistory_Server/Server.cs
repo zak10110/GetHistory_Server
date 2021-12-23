@@ -18,6 +18,7 @@ namespace GetHistory_Server
         public Socket socket { get; set; }
         public IPEndPoint ipPoint { get; set; }
         public List<Socket> clients { get; set; }
+        public byte[] data { get; set; }
         public int ClientID { get; set; }
         public Server(int port, string IpAdr)
         {
@@ -86,13 +87,14 @@ namespace GetHistory_Server
         {
 
             StringBuilder stringBuilder = new StringBuilder();
-            byte[] data = new byte[20000];
-
+            this.data = new byte[2000000];
+           
             do
             {
                 this.bytes = clientSoc.Receive(data);
-                stringBuilder.Append(Encoding.Unicode.GetString(data, 0, this.bytes));
+                stringBuilder.Append(Encoding.Unicode.GetString(this.data, 0, this.bytes));
             } while (socket.Available > 0);
+
 
             return stringBuilder.ToString();
         }
